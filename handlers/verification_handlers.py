@@ -51,7 +51,11 @@ async def process_car_photo(message: Message, t, telegram_id, user_lang, state: 
         await UserRepository.update_car_photo(session, telegram_id, car_file_id)
         
         # Отправляем заявку администратору
-        admin_id = config.ADMIN_ID
+        admin_id = config.get_admin_id()
+        if not admin_id:
+            await message.answer(t("errors.admin_not_configured") or "Администратор не настроен. Обратитесь к разработчику.")
+            await state.clear()
+            return
         admin_text = get_text(
             "admin.verification_request",
             user_lang
@@ -92,7 +96,8 @@ async def process_car_photo(message: Message, t, telegram_id, user_lang, state: 
 async def process_admin_verification(callback: CallbackQuery, t, telegram_id):
     """Обработка решения администратора по верификации"""
     # Проверяем, что это администратор
-    if telegram_id != config.ADMIN_ID:
+    admin_id = config.get_admin_id()
+    if admin_id and telegram_id != admin_id:
         await callback.answer("Доступ запрещен", show_alert=True)
         return
     

@@ -13,7 +13,16 @@ class Config(BaseSettings):
     DB_NAME: str = "blink_db"
     DB_USER: str = "blink_user"
     DB_PASSWORD: str = ""  # Опционально, по умолчанию пустая строка
-    ADMIN_ID: int  # ID администратора в Telegram
+    ADMIN_ID: str = ""  # ID администратора в Telegram (строка, будет конвертироваться в int)
+    
+    def get_admin_id(self) -> Optional[int]:
+        """Получить ID администратора как int, или None если не установлен или некорректный"""
+        if not self.ADMIN_ID or self.ADMIN_ID.strip() == "":
+            return None
+        try:
+            return int(self.ADMIN_ID.strip())
+        except (ValueError, TypeError):
+            return None
 
     @property
     def DATABASE_URL(self) -> str:
