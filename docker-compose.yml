@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: blink_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-blink_db}
+      POSTGRES_USER: ${DB_USER:-blink_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blink_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-blink_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: .
+    container_name: blink_bot
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - blink_net
+    restart: unless-stopped
+
+networks:
+  blink_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
